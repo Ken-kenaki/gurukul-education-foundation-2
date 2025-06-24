@@ -1,7 +1,5 @@
-// src/app/admin/layout.tsx
 import "@/app/globals.css";
 import { ReactNode } from "react";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getLoggedInUser } from "@/lib/server/appwrite";
 import AdminNavbar from "@/Components/admin/AdminNavbar";
@@ -13,11 +11,11 @@ interface LayoutProps {
 
 export default async function AdminLayout({ children }: LayoutProps) {
   const user = await getLoggedInUser();
-  if (!user) redirect("/signup");
+  if (!user) redirect("/login");
 
   return (
-    <html className="min-h-screen bg-gray-50 flex">
-      <body>
+    <html lang="en" className="min-h-screen bg-gray-50">
+      <body className="min-h-screen bg-gray-50">
         <AdminNavbar
           user={{
             email: user.email,
@@ -26,8 +24,8 @@ export default async function AdminLayout({ children }: LayoutProps) {
           }}
         />
 
-        <div className="flex-1 lg:ml-64 flex flex-col">
-          <main className="flex-1 p-6">{children}</main>
+        <div className="lg:ml-16 flex flex-col min-h-screen transition-all duration-300">
+          <main className="flex-1 p-6 pt-20 lg:pt-6">{children}</main>
           <AdminFooter />
         </div>
       </body>

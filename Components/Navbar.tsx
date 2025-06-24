@@ -3,67 +3,51 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Menu, X, ChevronDown, ArrowRight } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
-  const [showDestinations, setShowDestinations] = useState(false);
-  const [showTestPrep, setShowTestPrep] = useState(false);
-  const [showServices, setShowServices] = useState(false);
-  const mobileMenuRef = useRef(null);
-  const hamburgerButtonRef = useRef(null);
-  const navbarRef = useRef(null);
-  const dropdownRef = useRef(null);
-  const testPrepRef = useRef(null);
-  const servicesRef = useRef(null);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
+  const hamburgerButtonRef = useRef<HTMLButtonElement>(null);
+  const navbarRef = useRef<HTMLDivElement>(null);
 
   const destinations = [
-    { name: "South Korea", route: "/countries" },
-    { name: "Australia", route: "/countries" },
-    { name: "Japan", route: "/countries" },
-    { name: "UK", route: "/countries" },
-    { name: "Malta", route: "/countries" },
+    { name: "South Korea", route: "/countries", flag: "🇰🇷" },
+    { name: "Australia", route: "/countries", flag: "🇦🇺" },
+    { name: "Japan", route: "/countries", flag: "🇯🇵" },
+    { name: "UK", route: "/countries", flag: "🇬🇧" },
+    { name: "Malta", route: "/countries", flag: "🇲🇹" },
   ];
 
   const testPreparations = [
-    { name: "IELTS Preparation", route: "/test-preparations" },
-    { name: "PTE Preparation", route: "/test-preparations" },
-    { name: "Japanese Language", route: "/test-preparations" },
-    { name: "Korean Language", route: "/test-preparations" },
+    { name: "IELTS Preparation", route: "/test-preparations", icon: "📝" },
+    { name: "PTE Preparation", route: "/test-preparations", icon: "💻" },
+    { name: "Japanese Language", route: "/test-preparations", icon: "🇯🇵" },
+    { name: "Korean Language", route: "/test-preparations", icon: "🇰🇷" },
   ];
 
   const services = [
-    { name: "Study Abroad Consultation", route: "/services" },
-    { name: "Visa Assistance", route: "/services" },
-    { name: "Scholarship Guidance", route: "/services" },
-    { name: "Test Preparations", route: "/services" },
-    { name: "Pre-Departure Briefing", route: "/services" },
-    { name: "Post-Arrival Support", route: "/services" },
+    { name: "Study Abroad Consultation", route: "/services", icon: "🎓" },
+    { name: "Visa Assistance", route: "/services", icon: "📋" },
+    { name: "Scholarship Guidance", route: "/services", icon: "💰" },
+    { name: "Test Preparations", route: "/services", icon: "📚" },
+    { name: "Pre-Departure Briefing", route: "/services", icon: "✈️" },
+    { name: "Post-Arrival Support", route: "/services", icon: "🤝" },
   ];
 
-  // Handle click outside mobile menu and dropdowns
+  // Handle click outside mobile menu
   useEffect(() => {
-    function handleClickOutside(event) {
+    function handleClickOutside(event: MouseEvent) {
       if (
         mobileMenuRef.current &&
-        !mobileMenuRef.current.contains(event.target) &&
+        !mobileMenuRef.current.contains(event.target as Node) &&
         hamburgerButtonRef.current &&
-        !hamburgerButtonRef.current.contains(event.target)
+        !hamburgerButtonRef.current.contains(event.target as Node)
       ) {
         setIsOpen(false);
-      }
-
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setShowDestinations(false);
-      }
-
-      if (testPrepRef.current && !testPrepRef.current.contains(event.target)) {
-        setShowTestPrep(false);
-      }
-
-      if (servicesRef.current && !servicesRef.current.contains(event.target)) {
-        setShowServices(false);
       }
     }
 
@@ -71,22 +55,17 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Handle scroll behavior for complete hiding
+  // Handle scroll behavior
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
 
-      // Show navbar when near top
       if (currentScrollY < 50) {
         setIsVisible(true);
-      }
-      // Hide/show based on scroll direction after 50px
-      else if (currentScrollY > 50) {
+      } else if (currentScrollY > 50) {
         if (currentScrollY > lastScrollY) {
-          // Scrolling down - hide completely
           setIsVisible(false);
         } else if (currentScrollY < lastScrollY) {
-          // Scrolling up - show
           setIsVisible(true);
         }
       }
@@ -98,15 +77,68 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY]);
 
+  const handleDropdownEnter = (dropdown: string) => {
+    setActiveDropdown(dropdown);
+  };
+
+  const handleDropdownLeave = () => {
+    setActiveDropdown(null);
+  };
+
+  const dropdownVariants = {
+    hidden: {
+      opacity: 0,
+      y: -10,
+      scale: 0.95,
+    },
+    visible: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      transition: {
+        duration: 0.2,
+        ease: "easeOut",
+      },
+    },
+    exit: {
+      opacity: 0,
+      y: -10,
+      scale: 0.95,
+      transition: {
+        duration: 0.15,
+        ease: "easeIn",
+      },
+    },
+  };
+
+  const mobileMenuVariants = {
+    hidden: {
+      x: "100%",
+      transition: {
+        duration: 0.3,
+        ease: "easeInOut",
+      },
+    },
+    visible: {
+      x: 0,
+      transition: {
+        duration: 0.3,
+        ease: "easeInOut",
+      },
+    },
+  };
+
   return (
     <>
       {/* Top Header Bar - Desktop Only */}
-      <div
-        className={`hidden lg:block bg-[#2C3C81] text-[#F5F4F5] py-2 px-4 text-sm fixed w-full z-50 transition-all duration-300 ease-in-out ${
-          isVisible
-            ? "translate-y-0 opacity-100"
-            : "-translate-y-full opacity-0"
-        }`}
+      <motion.div
+        initial={{ y: 0 }}
+        animate={{
+          y: isVisible ? 0 : "-100%",
+          opacity: isVisible ? 1 : 0,
+        }}
+        transition={{ duration: 0.3, ease: "easeInOut" }}
+        className="hidden lg:block bg-[#2C3C81] text-[#F5F4F5] py-2 px-4 text-sm fixed w-full z-50"
       >
         <div className="container mx-auto flex justify-end items-center space-x-4 md:space-x-8">
           <Link
@@ -128,358 +160,382 @@ export default function Navbar() {
             <span>LOGIN</span>
           </Link>
         </div>
-      </div>
+      </motion.div>
 
       {/* Main Navigation */}
-      <nav
+      <motion.nav
         ref={navbarRef}
-        className={`bg-white shadow-lg fixed lg:top-[40px] top-0 z-50 w-full transition-all duration-300 ease-in-out ${
-          isVisible
-            ? "translate-y-0 opacity-100"
-            : "-translate-y-full opacity-0"
-        }`}
+        initial={{ y: 0 }}
+        animate={{
+          y: isVisible ? 0 : "-100%",
+          opacity: isVisible ? 1 : 0,
+        }}
+        transition={{ duration: 0.3, ease: "easeInOut" }}
+        className="bg-white shadow-lg fixed lg:top-[40px] top-0 z-40 w-full"
       >
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center py-3">
             {/* Logo */}
-            <div className="flex items-center">
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              transition={{ duration: 0.2 }}
+              className="flex items-center"
+            >
               <Link href="/" className="text-2xl md:text-3xl font-bold">
                 <span className="text-[#2C3C81]">Gurukul</span>
                 <span className="text-[#C73D43]">Education</span>
               </Link>
-            </div>
+            </motion.div>
 
             {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center space-x-6 xl:space-x-8">
               {/* Study Destinations Dropdown */}
-              <div className="relative" ref={dropdownRef}>
-                <button
-                  className="flex items-center text-gray-700 hover:text-[#2C3C81] font-medium transition-colors"
-                  onMouseEnter={() => setShowDestinations(true)}
-                  onClick={() => setShowDestinations(!showDestinations)}
+              <div
+                className="relative"
+                onMouseEnter={() => handleDropdownEnter("destinations")}
+                onMouseLeave={handleDropdownLeave}
+              >
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  className="flex items-center text-gray-700 hover:text-[#2C3C81] font-medium transition-colors py-4"
                 >
                   STUDY DESTINATIONS
-                  <ChevronDown
-                    className={`ml-1 w-4 h-4 transition-transform ${
-                      showDestinations ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-
-                {/* Dropdown Menu */}
-                {showDestinations && (
-                  <div
-                    className="absolute top-full left-1/2 transform -translate-x-1/2 w-64 mt-2 bg-white rounded-lg shadow-xl border border-gray-100 py-4 z-50"
-                    onMouseLeave={() => setShowDestinations(false)}
+                  <motion.div
+                    animate={{ rotate: activeDropdown === "destinations" ? 180 : 0 }}
+                    transition={{ duration: 0.2 }}
                   >
-                    <div className="space-y-2 px-4">
-                      {destinations.map((destination, index) => (
-                        <Link
-                          key={index}
-                          href={destination.route}
-                          className="flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-[#F5F4F5] transition-colors"
-                          onClick={() => setShowDestinations(false)}
-                        >
-                          <span className="text-sm font-medium text-gray-700">
-                            {destination.name}
-                          </span>
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                    <ChevronDown className="ml-1 w-4 h-4" />
+                  </motion.div>
+                </motion.button>
+
+                <AnimatePresence>
+                  {activeDropdown === "destinations" && (
+                    <motion.div
+                      variants={dropdownVariants}
+                      initial="hidden"
+                      animate="visible"
+                      exit="exit"
+                      className="absolute top-full left-1/2 transform -translate-x-1/2 w-72 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 py-4 z-50"
+                      style={{ paddingTop: "1rem" }}
+                    >
+                      <div className="space-y-1 px-4">
+                        {destinations.map((destination, index) => (
+                          <motion.div
+                            key={index}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: index * 0.05 }}
+                          >
+                            <Link
+                              href={destination.route}
+                              className="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-[#F5F4F5] transition-colors group"
+                            >
+                              <span className="text-2xl">{destination.flag}</span>
+                              <span className="text-sm font-medium text-gray-700 group-hover:text-[#2C3C81]">
+                                {destination.name}
+                              </span>
+                              <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-[#C73D43] group-hover:translate-x-1 transition-all ml-auto" />
+                            </Link>
+                          </motion.div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
-              <Link
-                href="/universities"
-                className="text-gray-700 hover:text-[#2C3C81] font-medium transition-colors"
-              >
-                UNIVERSITIES
-              </Link>
+              <motion.div whileHover={{ scale: 1.05 }}>
+                <Link
+                  href="/universities"
+                  className="text-gray-700 hover:text-[#2C3C81] font-medium transition-colors"
+                >
+                  UNIVERSITIES
+                </Link>
+              </motion.div>
 
               {/* Test Preparations Dropdown */}
-              <div className="relative" ref={testPrepRef}>
-                <button
-                  className="flex items-center text-gray-700 hover:text-[#2C3C81] font-medium transition-colors"
-                  onMouseEnter={() => setShowTestPrep(true)}
-                  onClick={() => setShowTestPrep(!showTestPrep)}
+              <div
+                className="relative"
+                onMouseEnter={() => handleDropdownEnter("testprep")}
+                onMouseLeave={handleDropdownLeave}
+              >
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  className="flex items-center text-gray-700 hover:text-[#2C3C81] font-medium transition-colors py-4"
                 >
                   TEST PREPARATIONS
-                  <ChevronDown
-                    className={`ml-1 w-4 h-4 transition-transform ${
-                      showTestPrep ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-
-                {/* Dropdown Menu */}
-                {showTestPrep && (
-                  <div
-                    className="absolute top-full left-1/2 transform -translate-x-1/2 w-64 mt-2 bg-white rounded-lg shadow-xl border border-gray-100 py-4 z-50"
-                    onMouseLeave={() => setShowTestPrep(false)}
+                  <motion.div
+                    animate={{ rotate: activeDropdown === "testprep" ? 180 : 0 }}
+                    transition={{ duration: 0.2 }}
                   >
-                    <div className="space-y-2 px-4">
-                      {testPreparations.map((test, index) => (
-                        <Link
-                          key={index}
-                          href={test.route}
-                          className="flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-[#F5F4F5] transition-colors"
-                          onClick={() => setShowTestPrep(false)}
-                        >
-                          <span className="text-sm font-medium text-gray-700">
-                            {test.name}
-                          </span>
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                    <ChevronDown className="ml-1 w-4 h-4" />
+                  </motion.div>
+                </motion.button>
+
+                <AnimatePresence>
+                  {activeDropdown === "testprep" && (
+                    <motion.div
+                      variants={dropdownVariants}
+                      initial="hidden"
+                      animate="visible"
+                      exit="exit"
+                      className="absolute top-full left-1/2 transform -translate-x-1/2 w-72 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 py-4 z-50"
+                      style={{ paddingTop: "1rem" }}
+                    >
+                      <div className="space-y-1 px-4">
+                        {testPreparations.map((test, index) => (
+                          <motion.div
+                            key={index}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: index * 0.05 }}
+                          >
+                            <Link
+                              href={test.route}
+                              className="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-[#F5F4F5] transition-colors group"
+                            >
+                              <span className="text-xl">{test.icon}</span>
+                              <span className="text-sm font-medium text-gray-700 group-hover:text-[#2C3C81]">
+                                {test.name}
+                              </span>
+                              <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-[#C73D43] group-hover:translate-x-1 transition-all ml-auto" />
+                            </Link>
+                          </motion.div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
-              <Link
-                href="/about-us"
-                className="text-gray-700 hover:text-[#2C3C81] font-medium transition-colors"
-              >
-                ABOUT US
-              </Link>
+              <motion.div whileHover={{ scale: 1.05 }}>
+                <Link
+                  href="/about"
+                  className="text-gray-700 hover:text-[#2C3C81] font-medium transition-colors"
+                >
+                  ABOUT US
+                </Link>
+              </motion.div>
 
               {/* Services Dropdown */}
-              <div className="relative" ref={servicesRef}>
-                <button
-                  className="flex items-center text-gray-700 hover:text-[#2C3C81] font-medium transition-colors"
-                  onMouseEnter={() => setShowServices(true)}
-                  onClick={() => setShowServices(!showServices)}
+              <div
+                className="relative"
+                onMouseEnter={() => handleDropdownEnter("services")}
+                onMouseLeave={handleDropdownLeave}
+              >
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  className="flex items-center text-gray-700 hover:text-[#2C3C81] font-medium transition-colors py-4"
                 >
                   SERVICES
-                  <ChevronDown
-                    className={`ml-1 w-4 h-4 transition-transform ${
-                      showServices ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-
-                {/* Dropdown Menu */}
-                {showServices && (
-                  <div
-                    className="absolute top-full left-1/2 transform -translate-x-1/2 w-64 mt-2 bg-white rounded-lg shadow-xl border border-gray-100 py-4 z-50"
-                    onMouseLeave={() => setShowServices(false)}
+                  <motion.div
+                    animate={{ rotate: activeDropdown === "services" ? 180 : 0 }}
+                    transition={{ duration: 0.2 }}
                   >
-                    <div className="space-y-2 px-4">
-                      {services.map((service, index) => (
-                        <Link
-                          key={index}
-                          href={service.route}
-                          className="flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-[#F5F4F5] transition-colors"
-                          onClick={() => setShowServices(false)}
-                        >
-                          <span className="text-sm font-medium text-gray-700">
-                            {service.name}
-                          </span>
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                    <ChevronDown className="ml-1 w-4 h-4" />
+                  </motion.div>
+                </motion.button>
+
+                <AnimatePresence>
+                  {activeDropdown === "services" && (
+                    <motion.div
+                      variants={dropdownVariants}
+                      initial="hidden"
+                      animate="visible"
+                      exit="exit"
+                      className="absolute top-full left-1/2 transform -translate-x-1/2 w-80 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 py-4 z-50"
+                      style={{ paddingTop: "1rem" }}
+                    >
+                      <div className="space-y-1 px-4">
+                        {services.map((service, index) => (
+                          <motion.div
+                            key={index}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: index * 0.05 }}
+                          >
+                            <Link
+                              href={service.route}
+                              className="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-[#F5F4F5] transition-colors group"
+                            >
+                              <span className="text-xl">{service.icon}</span>
+                              <span className="text-sm font-medium text-gray-700 group-hover:text-[#2C3C81] flex-1">
+                                {service.name}
+                              </span>
+                              <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-[#C73D43] group-hover:translate-x-1 transition-all" />
+                            </Link>
+                          </motion.div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
-              <Link
-                href="/contact"
-                className="text-gray-700 hover:text-[#2C3C81] font-medium transition-colors"
-              >
-                CONTACT
-              </Link>
+              <motion.div whileHover={{ scale: 1.05 }}>
+                <Link
+                  href="/contact"
+                  className="text-gray-700 hover:text-[#2C3C81] font-medium transition-colors"
+                >
+                  CONTACT
+                </Link>
+              </motion.div>
 
-              <Link
-                href="/contact"
-                className="bg-[#C73D43] text-[#F5F4F5] px-4 xl:px-6 py-2 rounded font-medium hover:bg-[#B2ACCE] hover:text-[#2C3C81] transition-all duration-300 whitespace-nowrap"
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                GET CONSULTATION
-              </Link>
+                <Link
+                  href="/contact"
+                  className="bg-[#C73D43] text-[#F5F4F5] px-4 xl:px-6 py-2 rounded font-medium hover:bg-[#B2ACCE] hover:text-[#2C3C81] transition-all duration-300 whitespace-nowrap"
+                >
+                  GET CONSULTATION
+                </Link>
+              </motion.div>
             </div>
 
             {/* Mobile Menu Button */}
-            <button
+            <motion.button
               ref={hamburgerButtonRef}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
               className="lg:hidden hover:scale-110 transition-transform duration-200"
               onClick={() => setIsOpen(!isOpen)}
               aria-label="Toggle menu"
             >
-              {isOpen ? (
-                <X className="w-6 h-6" />
-              ) : (
-                <Menu className="w-6 h-6" />
-              )}
-            </button>
+              <AnimatePresence mode="wait">
+                {isOpen ? (
+                  <motion.div
+                    key="close"
+                    initial={{ rotate: -90, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                    exit={{ rotate: 90, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <X className="w-6 h-6" />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="menu"
+                    initial={{ rotate: 90, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                    exit={{ rotate: -90, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <Menu className="w-6 h-6" />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.button>
           </div>
         </div>
 
         {/* Mobile Menu */}
-        <div
-          ref={mobileMenuRef}
-          className={`lg:hidden fixed top-0 right-0 w-80 bg-white h-screen transform transition-transform duration-300 ease-in-out z-100 shadow-xl ${
-            isOpen ? "translate-x-0" : "translate-x-full"
-          }`}
-        >
-          <div className="p-6">
-            <button
-              className="absolute top-4 right-4 hover:scale-110 transition-transform duration-200"
-              onClick={() => setIsOpen(false)}
-              aria-label="Close menu"
-            >
-              <X className="w-6 h-6" />
-            </button>
+        <AnimatePresence>
+          {isOpen && (
+            <>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
+                onClick={() => setIsOpen(false)}
+              />
+              <motion.div
+                ref={mobileMenuRef}
+                variants={mobileMenuVariants}
+                initial="hidden"
+                animate="visible"
+                exit="hidden"
+                className="lg:hidden fixed top-0 right-0 w-80 bg-white h-screen z-50 shadow-xl overflow-y-auto"
+              >
+                <div className="p-6">
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    className="absolute top-4 right-4 hover:scale-110 transition-transform duration-200"
+                    onClick={() => setIsOpen(false)}
+                    aria-label="Close menu"
+                  >
+                    <X className="w-6 h-6" />
+                  </motion.button>
 
-            <div className="flex flex-col space-y-6 mt-12">
-              {/* Mobile Top Nav Items */}
-              <div className="border-b pb-4">
-                <Link
-                  href="/news-offer"
-                  className="block py-2 text-gray-700 hover:text-[#2C3C81] font-medium"
-                  onClick={() => setIsOpen(false)}
-                >
-                  NEWS & OFFER
-                </Link>
-                <Link
-                  href="/gallery"
-                  className="block py-2 text-gray-700 hover:text-[#2C3C81] font-medium"
-                  onClick={() => setIsOpen(false)}
-                >
-                  GALLERY
-                </Link>
-                <Link
-                  href="/login"
-                  className="block py-2 text-gray-700 hover:text-[#2C3C81] font-medium"
-                  onClick={() => setIsOpen(false)}
-                >
-                  LOGIN
-                </Link>
-              </div>
-
-              {/* Mobile Study Destinations */}
-              <div>
-                <button
-                  className="flex items-center justify-between w-full text-gray-700 hover:text-[#2C3C81] font-medium py-2 transition-colors"
-                  onClick={() => setShowDestinations(!showDestinations)}
-                >
-                  <span>STUDY DESTINATIONS</span>
-                  <ChevronDown
-                    className={`w-4 h-4 transition-transform ${
-                      showDestinations ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-                {showDestinations && (
-                  <div className="ml-4 mt-2 space-y-2">
-                    {destinations.map((destination, index) => (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="flex flex-col space-y-6 mt-12"
+                  >
+                    {/* Mobile Top Nav Items */}
+                    <div className="border-b pb-4 space-y-2">
                       <Link
-                        key={index}
-                        href={destination.route}
-                        className="block py-1 text-sm text-gray-600 hover:text-[#2C3C81]"
+                        href="/news-offer"
+                        className="block py-2 text-gray-700 hover:text-[#2C3C81] font-medium transition-colors"
                         onClick={() => setIsOpen(false)}
                       >
-                        {destination.name}
+                        NEWS & OFFER
                       </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Mobile Universities */}
-              <Link
-                href="/universities"
-                className="text-gray-700 hover:text-[#2C3C81] font-medium py-2"
-                onClick={() => setIsOpen(false)}
-              >
-                UNIVERSITIES
-              </Link>
-
-              {/* Mobile Test Preparations */}
-              <div>
-                <button
-                  className="flex items-center justify-between w-full text-gray-700 hover:text-[#2C3C81] font-medium py-2 transition-colors"
-                  onClick={() => setShowTestPrep(!showTestPrep)}
-                >
-                  <span>TEST PREPARATIONS</span>
-                  <ChevronDown
-                    className={`w-4 h-4 transition-transform ${
-                      showTestPrep ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-                {showTestPrep && (
-                  <div className="ml-4 mt-2 space-y-2">
-                    {testPreparations.map((test, index) => (
                       <Link
-                        key={index}
-                        href={test.route}
-                        className="block py-1 text-sm text-gray-600 hover:text-[#2C3C81]"
+                        href="/gallery"
+                        className="block py-2 text-gray-700 hover:text-[#2C3C81] font-medium transition-colors"
                         onClick={() => setIsOpen(false)}
                       >
-                        {test.name}
+                        GALLERY
                       </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Mobile About Us */}
-              <Link
-                href="/about-us"
-                className="text-gray-700 hover:text-[#2C3C81] font-medium py-2"
-                onClick={() => setIsOpen(false)}
-              >
-                ABOUT US
-              </Link>
-
-              {/* Mobile Services */}
-              <div>
-                <button
-                  className="flex items-center justify-between w-full text-gray-700 hover:text-[#2C3C81] font-medium py-2 transition-colors"
-                  onClick={() => setShowServices(!showServices)}
-                >
-                  <span>SERVICES</span>
-                  <ChevronDown
-                    className={`w-4 h-4 transition-transform ${
-                      showServices ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-                {showServices && (
-                  <div className="ml-4 mt-2 space-y-2">
-                    {services.map((service, index) => (
                       <Link
-                        key={index}
-                        href={service.route}
-                        className="block py-1 text-sm text-gray-600 hover:text-[#2C3C81]"
+                        href="/login"
+                        className="block py-2 text-gray-700 hover:text-[#2C3C81] font-medium transition-colors"
                         onClick={() => setIsOpen(false)}
                       >
-                        {service.name}
+                        LOGIN
                       </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
+                    </div>
 
-              {/* Mobile Contact */}
-              <Link
-                href="/contact"
-                className="text-gray-700 hover:text-[#2C3C81] font-medium py-2"
-                onClick={() => setIsOpen(false)}
-              >
-                CONTACT
-              </Link>
+                    {/* Mobile Main Nav Items */}
+                    <div className="space-y-4">
+                      <Link
+                        href="/universities"
+                        className="block py-2 text-gray-700 hover:text-[#2C3C81] font-medium transition-colors"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        UNIVERSITIES
+                      </Link>
+                      <Link
+                        href="/about"
+                        className="block py-2 text-gray-700 hover:text-[#2C3C81] font-medium transition-colors"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        ABOUT US
+                      </Link>
+                      <Link
+                        href="/contact"
+                        className="block py-2 text-gray-700 hover:text-[#2C3C81] font-medium transition-colors"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        CONTACT
+                      </Link>
+                    </div>
 
-              <Link
-                href="/contact"
-                className="w-full bg-[#C73D43] text-[#F5F4F5] px-6 py-3 rounded font-medium hover:bg-[#B2ACCE] hover:text-[#2C3C81] transition-all duration-300 text-center block"
-                onClick={() => setIsOpen(false)}
-              >
-                GET CONSULTATION
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
+                    <motion.div
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <Link
+                        href="/contact"
+                        className="w-full bg-[#C73D43] text-[#F5F4F5] px-6 py-3 rounded font-medium hover:bg-[#B2ACCE] hover:text-[#2C3C81] transition-all duration-300 text-center block"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        GET CONSULTATION
+                      </Link>
+                    </motion.div>
+                  </motion.div>
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+      </motion.nav>
     </>
   );
 }
