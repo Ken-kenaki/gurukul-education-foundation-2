@@ -9,6 +9,7 @@ export interface Story {
   author: string;
   content: string;
   status: 'draft' | 'published';
+  imageId?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -60,12 +61,25 @@ export interface University {
   createdAt?: string;
 }
 
+export interface Testimonial {
+  $id?: string;
+  name: string;
+  program: string;
+  university: string;
+  content: string;
+  rating: number;
+  imageId?: string;
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export class DatabaseService {
   private static async getClient() {
     return await createAdminClient();
   }
 
-  // Stories CRUD
+  // Stories CRUD (now Testimonials)
   static async createStory(data: Omit<Story, '$id' | 'createdAt' | 'updatedAt'>) {
     const { databases } = await this.getClient();
     return await databases.createDocument(
@@ -120,6 +134,63 @@ export class DatabaseService {
     return await databases.deleteDocument(
       appwriteConfig.databaseId,
       appwriteConfig.collections.stories,
+      id
+    );
+  }
+
+  // Testimonials CRUD
+  static async createTestimonial(data: Omit<Testimonial, '$id' | 'createdAt' | 'updatedAt'>) {
+    const { databases } = await this.getClient();
+    return await databases.createDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.collections.testimonials,
+      ID.unique(),
+      {
+        ...data,
+        status: 'pending',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }
+    );
+  }
+
+  static async getTestimonials(limit = 50, offset = 0, status?: string) {
+    const { databases } = await this.getClient();
+    const queries = [
+      Query.limit(limit),
+      Query.offset(offset),
+      Query.orderDesc('createdAt')
+    ];
+    
+    if (status) {
+      queries.push(Query.equal('status', status));
+    }
+
+    return await databases.listDocuments(
+      appwriteConfig.databaseId,
+      appwriteConfig.collections.testimonials,
+      queries
+    );
+  }
+
+  static async updateTestimonial(id: string, data: Partial<Testimonial>) {
+    const { databases } = await this.getClient();
+    return await databases.updateDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.collections.testimonials,
+      id,
+      {
+        ...data,
+        updatedAt: new Date().toISOString(),
+      }
+    );
+  }
+
+  static async deleteTestimonial(id: string) {
+    const { databases } = await this.getClient();
+    return await databases.deleteDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.collections.testimonials,
       id
     );
   }

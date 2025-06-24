@@ -1,103 +1,77 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowRight } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Autoplay } from "swiper/modules";
+import { motion } from "framer-motion";
 import "swiper/css";
 import "swiper/css/navigation";
 
+interface University {
+  $id: string;
+  name: string;
+  country: string;
+  intake: string;
+  programs: string;
+  ranking: string;
+  description?: string;
+  imageUrl?: string;
+}
+
 export default function UniversitiesCarousel() {
+  const [universities, setUniversities] = useState<University[]>([]);
+  const [loading, setLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
 
-  const universities = [
-    {
-      name: "Harvard University",
-      country: "USA",
-      image: "/harvard.jpg",
-      intake: "Fall: Sep | Spring: Jan",
-      programs: "200+ undergraduate programs",
-      ranking: "#1 in World University Rankings",
-    },
-    {
-      name: "University of Oxford",
-      country: "UK",
-      image: "/oxford.jpg",
-      intake: "Fall: Oct | Spring: Apr",
-      programs: "150+ undergraduate programs",
-      ranking: "#2 in World University Rankings",
-    },
-    {
-      name: "University of Tokyo",
-      country: "Japan",
-      image: "/tokyo.jpg",
-      intake: "Fall: Sep | Spring: Apr",
-      programs: "90+ undergraduate programs",
-      ranking: "#1 in Japan",
-    },
-    {
-      name: "Seoul National University",
-      country: "South Korea",
-      image: "/seoul.jpg",
-      intake: "Fall: Mar | Spring: Sep",
-      programs: "85+ undergraduate programs",
-      ranking: "#1 in Korea",
-    },
-    {
-      name: "Stanford University",
-      country: "USA",
-      image: "/stanford.jpg",
-      intake: "Fall: Sep | Winter: Jan",
-      programs: "180+ undergraduate programs",
-      ranking: "#3 in World University Rankings",
-    },
-    {
-      name: "University of Cambridge",
-      country: "UK",
-      image: "/cambridge.jpg",
-      intake: "Fall: Oct | Spring: Jan",
-      programs: "160+ undergraduate programs",
-      ranking: "#4 in World University Rankings",
-    },
-    {
-      name: "Kyoto University",
-      country: "Japan",
-      image: "/kyoto.jpg",
-      intake: "Fall: Apr | Spring: Oct",
-      programs: "80+ undergraduate programs",
-      ranking: "#2 in Japan",
-    },
-    {
-      name: "KAIST",
-      country: "South Korea",
-      image: "/kaist.jpg",
-      intake: "Fall: Mar | Spring: Sep",
-      programs: "60+ undergraduate programs",
-      ranking: "#2 in Korea",
-    },
-    {
-      name: "MIT",
-      country: "USA",
-      image: "/mit.jpg",
-      intake: "Fall: Sep | Spring: Feb",
-      programs: "120+ undergraduate programs",
-      ranking: "#5 in World University Rankings",
-    },
-    {
-      name: "Imperial College London",
-      country: "UK",
-      image: "/imperial.jpg",
-      intake: "Fall: Oct | Spring: Jan",
-      programs: "140+ undergraduate programs",
-      ranking: "#6 in World University Rankings",
-    },
-  ];
+  useEffect(() => {
+    fetchUniversities();
+  }, []);
+
+  const fetchUniversities = async () => {
+    try {
+      const response = await fetch("/api/universities");
+      if (response.ok) {
+        const data = await response.json();
+        setUniversities(data.documents || []);
+      }
+    } catch (error) {
+      console.error("Failed to fetch universities:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getImageUrl = (imageUrl?: string, universityName?: string) => {
+    if (imageUrl) return imageUrl;
+    // Fallback to placeholder images
+    return `https://picsum.photos/400/300?random=${Math.random()}`;
+  };
+
+  if (loading) {
+    return (
+      <div className="bg-[#F5F4F5] py-16 px-4">
+        <div className="container mx-auto">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#C73D43] mx-auto"></div>
+            <p className="mt-4 text-[#2C3C81]">Loading universities...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-[#F5F4F5] py-16 px-4">
       <div className="container mx-auto">
         {/* Header Section */}
-        <div className="text-center mb-12">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
+          className="text-center mb-12"
+        >
           <h2 className="text-3xl md:text-4xl font-bold text-[#2C3C81] mb-4">
             Discover Top Courses and Universities
           </h2>
@@ -106,10 +80,16 @@ export default function UniversitiesCarousel() {
             world-class education and exceptional opportunities for
             international students.
           </p>
-        </div>
+        </motion.div>
 
         {/* University Carousel */}
-        <div className="relative">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+          viewport={{ once: true }}
+          className="relative"
+        >
           <Swiper
             modules={[Navigation, Autoplay]}
             spaceBetween={30}
@@ -124,14 +104,18 @@ export default function UniversitiesCarousel() {
             className="!pb-12"
           >
             {universities.map((uni, index) => (
-              <SwiperSlide key={index}>
-                <div className="group relative h-80 rounded-xl overflow-hidden shadow-lg">
+              <SwiperSlide key={uni.$id}>
+                <motion.div
+                  whileHover={{ y: -5, scale: 1.02 }}
+                  transition={{ duration: 0.3 }}
+                  className="group relative h-80 rounded-xl overflow-hidden shadow-lg"
+                >
                   {/* University Image */}
                   <div className="absolute inset-0 bg-gray-200">
                     <img
-                      src={uni.image}
+                      src={getImageUrl(uni.imageUrl, uni.name)}
                       alt={uni.name}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                     />
                   </div>
 
@@ -146,40 +130,62 @@ export default function UniversitiesCarousel() {
                     </div>
 
                     {/* Hidden Details - Reveals on Hover */}
-                    <div className="max-h-0 overflow-hidden group-hover:max-h-96 transition-all duration-500">
+                    <motion.div
+                      initial={{ maxHeight: 0, opacity: 0 }}
+                      whileHover={{ maxHeight: 200, opacity: 1 }}
+                      transition={{ duration: 0.5 }}
+                      className="overflow-hidden"
+                    >
                       <div className="pt-4 border-t border-[#B2ACCE]/30 space-y-3">
                         <div className="flex items-center text-white/90">
                           <span className="text-[#B2ACCE] mr-2">Intake:</span>
                           {uni.intake}
                         </div>
-                        <div className="flex items-center text-white/90">
-                          <span className="text-[#B2ACCE] mr-2">Programs:</span>
-                          {uni.programs}
-                        </div>
-                        <div className="flex items-center text-white/90">
-                          <span className="text-[#B2ACCE] mr-2">Ranking:</span>
-                          {uni.ranking}
-                        </div>
+                        {uni.programs && (
+                          <div className="flex items-center text-white/90">
+                            <span className="text-[#B2ACCE] mr-2">Programs:</span>
+                            {uni.programs}
+                          </div>
+                        )}
+                        {uni.ranking && (
+                          <div className="flex items-center text-white/90">
+                            <span className="text-[#B2ACCE] mr-2">Ranking:</span>
+                            {uni.ranking}
+                          </div>
+                        )}
                       </div>
-                      <button className="mt-4 group flex items-center text-[#B2ACCE] hover:text-white transition-colors">
+                      <motion.button
+                        whileHover={{ x: 5 }}
+                        className="mt-4 group flex items-center text-[#B2ACCE] hover:text-white transition-colors"
+                      >
                         <span>Explore Programs</span>
-                        <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                      </button>
-                    </div>
+                        <ArrowRight className="ml-2 w-4 h-4 transition-transform" />
+                      </motion.button>
+                    </motion.div>
                   </div>
-                </div>
+                </motion.div>
               </SwiperSlide>
             ))}
           </Swiper>
-        </div>
+        </motion.div>
 
         {/* View All Button */}
-        <div className="text-center mt-12">
-          <button className="group inline-flex items-center bg-[#C73D43] text-[#F5F4F5] px-8 py-3 rounded-lg font-semibold hover:bg-[#2C3C81] transition-colors">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+          viewport={{ once: true }}
+          className="text-center mt-12"
+        >
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="group inline-flex items-center bg-[#C73D43] text-[#F5F4F5] px-8 py-3 rounded-lg font-semibold hover:bg-[#2C3C81] transition-colors"
+          >
             View All Universities
             <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
       </div>
     </div>
   );

@@ -14,25 +14,26 @@ export async function PUT(
     // Get existing document
     const existingDoc = await databases.getDocument(
       appwriteConfig.databaseId,
-      appwriteConfig.collections.universities,
+      appwriteConfig.collections.testimonials,
       params.id
     );
 
     const name = formData.get('name') as string;
-    const country = formData.get('country') as string;
-    const intake = formData.get('intake') as string;
-    const programs = formData.get('programs') as string;
-    const ranking = formData.get('ranking') as string;
-    const description = formData.get('description') as string;
+    const program = formData.get('program') as string;
+    const university = formData.get('university') as string;
+    const content = formData.get('content') as string;
+    const rating = formData.get('rating') as string;
+    const status = formData.get('status') as string;
     const file = formData.get('file') as File | null;
 
     const updateData: any = {
       name: name || existingDoc.name,
-      country: country || existingDoc.country,
-      intake: intake || existingDoc.intake,
-      programs: programs || existingDoc.programs,
-      ranking: ranking || existingDoc.ranking,
-      description: description || existingDoc.description,
+      program: program || existingDoc.program,
+      university: university || existingDoc.university,
+      content: content || existingDoc.content,
+      rating: rating ? parseInt(rating) : existingDoc.rating,
+      status: status || existingDoc.status,
+      updatedAt: new Date().toISOString(),
     };
 
     // Handle file update if provided
@@ -40,7 +41,7 @@ export async function PUT(
       // Delete old file if exists
       if (existingDoc.imageId) {
         try {
-          await storage.deleteFile(appwriteConfig.buckets.universities, existingDoc.imageId);
+          await storage.deleteFile(appwriteConfig.buckets.testimonials, existingDoc.imageId);
         } catch (error) {
           console.log("Old file not found or already deleted");
         }
@@ -48,22 +49,22 @@ export async function PUT(
 
       // Upload new file
       const newFileId = ID.unique();
-      await storage.createFile(appwriteConfig.buckets.universities, newFileId, file);
+      await storage.createFile(appwriteConfig.buckets.testimonials, newFileId, file);
       updateData.imageId = newFileId;
     }
 
-    const university = await databases.updateDocument(
+    const testimonial = await databases.updateDocument(
       appwriteConfig.databaseId,
-      appwriteConfig.collections.universities,
+      appwriteConfig.collections.testimonials,
       params.id,
       updateData
     );
 
-    return NextResponse.json(university);
+    return NextResponse.json(testimonial);
   } catch (error: any) {
-    console.error("Update University Error:", error);
+    console.error("Update Testimonial Error:", error);
     return NextResponse.json(
-      { error: "Failed to update university", details: error.message },
+      { error: "Failed to update testimonial", details: error.message },
       { status: 500 }
     );
   }
@@ -79,14 +80,14 @@ export async function DELETE(
     // Get document first to delete associated file
     const document = await databases.getDocument(
       appwriteConfig.databaseId,
-      appwriteConfig.collections.universities,
+      appwriteConfig.collections.testimonials,
       params.id
     );
 
     // Delete file from storage if exists
     if (document.imageId) {
       try {
-        await storage.deleteFile(appwriteConfig.buckets.universities, document.imageId);
+        await storage.deleteFile(appwriteConfig.buckets.testimonials, document.imageId);
       } catch (error) {
         console.log("File not found or already deleted");
       }
@@ -95,14 +96,14 @@ export async function DELETE(
     // Delete document
     await databases.deleteDocument(
       appwriteConfig.databaseId,
-      appwriteConfig.collections.universities,
+      appwriteConfig.collections.testimonials,
       params.id
     );
 
-    return NextResponse.json({ message: "University deleted successfully" });
+    return NextResponse.json({ message: "Testimonial deleted successfully" });
   } catch (error: any) {
     return NextResponse.json(
-      { error: "Failed to delete university", details: error.message },
+      { error: "Failed to delete testimonial", details: error.message },
       { status: 500 }
     );
   }

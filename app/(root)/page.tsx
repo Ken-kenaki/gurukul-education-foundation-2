@@ -7,18 +7,24 @@ import StatsCounter from "@/Components/StatsCounter";
 import UniversitiesCarousel from "@/Components/Universities";
 import StudentSuccessCarousel from "@/Components/StudentSuccess";
 import CountriesCarousel from "@/Components/Countries";
+import AboutSection from "@/Components/About";
+import ContactSection from "@/Components/ContactSection";
+import FindUsSection from "@/Components/FindUs";
 
 export default async function page() {
   return (
     <main>
       <HeroSection />
       <CareerChoicesSection />
+      <AboutSection />
       <WhyUs />
       <NewsEventsCarousel />
       <StatsCounter />
       <UniversitiesCarousel />
       <StudentSuccessCarousel />
       <CountriesCarousel />
+      <ContactSection />
+      <FindUsSection />
     </main>
   );
 }
